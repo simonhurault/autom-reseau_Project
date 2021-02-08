@@ -9,7 +9,7 @@
 
 struct mesg {
 
-double label;
+long id;
 double position[1];
 double control[1];
 
@@ -21,7 +21,7 @@ int main (int nba, char *arg[]) {
 int result;
 int nsend;
 int nconnect;
-struct mesg message;
+struct mesg message, answer;
 int addr;
 long int Te;
 
@@ -35,23 +35,24 @@ int serveur, client, err, nConnect, longaddr , results, resultr;
     sockAddr.sin_addr.s_addr=inet_addr(arg[1]);
     addr=sizeof(sockAddr);
 
-message.label=0.0;
+message.id=0.0;
 message.position[0]=0.0;
 message.control[0]=0;
-Te=200000; // Te=100ms
+
 
 fcntl(serveur,F_SETFL,fcntl(serveur,F_GETFL) | O_NONBLOCK); 
 
 do{
-usleep(Te);
 
-message.label++;
-results=sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
-resultr=recvfrom(serveur,&message,sizeof(message), 0,(struct sockaddr*)&sockAddr,&addr);
+message.id++;
+printf("send : \n  id=%d \n",message.id);
+sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
 
-printf("\n client : \n  label=%lf rr=%d rs=%d ",message.label,resultr, results );
+while(recvfrom(serveur,&answer,sizeof(answer), 0,(struct sockaddr*)&sockAddr,&addr) == -1);
 
-}while(message.label<100.0);
+printf("recieve : \n  id=%d \n",answer.id);
+
+}while(message.id<100.0);
 
 close(serveur);
 

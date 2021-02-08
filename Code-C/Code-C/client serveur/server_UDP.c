@@ -8,7 +8,7 @@
 #include <fcntl.h>
 
 struct mesg {
-double label;
+long id;
 double position[1];
 double control[1];
 
@@ -30,7 +30,7 @@ int Rt;
 
   serveur=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
     sockAddr.sin_family=PF_INET;
-    sockAddr.sin_port=htons(2000); 
+    sockAddr.sin_port=htons(2500); 
     sockAddr.sin_addr.s_addr=0;
  	longaddr=sizeof(sockAddr);
 
@@ -39,32 +39,24 @@ int Rt;
         printf("\n erreur de bind du serveur UDP!! \n");
 	}
 
-message.label=0.0;
+message.id=0.0;
 message.position[0]=0.0;
 message.control[0]=0.0;
 
 
-Te=200000; // Te=100ms
-
-results=ERROR;
-resultr=ERROR;
-
 fcntl(serveur,F_SETFL,fcntl(serveur,F_GETFL) | O_NONBLOCK); 
  
-do{
-
-usleep(Te); 
-
-
-resultr=recvfrom(serveur,&message,sizeof(message), 0,(struct sockaddr*)&sockAddr,&longaddr);
-
-printf("server : \n label=%lf rt=%d rr=%d\n",message.label,results,resultr);
+while(1)
+{
 
 
-results=sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
+if(recvfrom(serveur,&message,sizeof(message), 0,(struct sockaddr*)&sockAddr,&longaddr) != -1)
+{	
+	printf("receive : \n id=%d \n",message.id);
+	sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
+}
 
-
-}while(message.label<100.0);
+}
 
 
 close(serveur);
