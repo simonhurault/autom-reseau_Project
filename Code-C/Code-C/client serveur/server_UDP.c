@@ -6,12 +6,13 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <time.h>
 
 struct mesg {
 long id;
 double position[1];
 double control[1];
-
+clock_t date;
 };
 
 #define ERROR (-1)

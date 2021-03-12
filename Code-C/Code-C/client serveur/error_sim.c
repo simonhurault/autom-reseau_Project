@@ -6,12 +6,13 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <time.h>
 
 struct mesg {
 long id;
 double position[1];
 double control[1];
-
+clock_t date;
 };
 
 #define ERROR (-1)
@@ -65,39 +66,44 @@ vrep_message.position[0]=0.0;
 vrep_message.control[0]=0.0;
 
 
-Te=5000000; // Te=1s
+Te=3000000; // Te=2s
 
 
 
 fcntl(server,F_SETFL,fcntl(server,F_GETFL) | O_NONBLOCK); 
-fcntl(client,F_SETFL,fcntl(client,F_GETFL) | O_NONBLOCK); 
-
+fcntl(client,F_SETFL,fcntl(client,F_GETFL) | O_NONBLOCK);
+ 
+/* Intializes random number generator */
+srand((unsigned) time(NULL));
  
 do{
 
 recvfrom(server, &rtt_message,sizeof(rtt_message), 0,(struct sockaddr*)&sockAddr,&longaddr);
+// make sure we don't send the packet twice
+ if(rtt_frame_id != rtt_message.id)
+ {
+   int eject_packet = rand() % 100;
+   rtt_frame_id = rtt_message.id;
+   printf("rtt frame : \n id=%d \n",rtt_message.id);
+   usleep(Te); // fake delay
+   if(eject_packet <= 50)
+   {
+     sendto(client, &rtt_message, sizeof(rtt_message), 0, (struct sockaddr*)&sock, sizeof(sock)); // send frame to VREP server
+   }
+   else printf("ejected packet \n");
+ }
 
-// printf("server : \n label=%lf rt=%d rr=%d\n",rtt_message.label,results,resultr);
-if(rtt_frame_id != rtt_message.id)
-{
-	rtt_frame_id = rtt_message.id;
-	printf("rtt frame : \n id=%d \n",rtt_message.id);
-	usleep(Te); // fake delay
-	sendto(client, &rtt_message, sizeof(rtt_message), 0, (struct sockaddr*)&sock, sizeof(sock)); // send frame to VREP server 
+
+ 
+ recvfrom(client, &vrep_message,sizeof(vrep_message), 0,(struct sockaddr*)&sock, &longaddr2);
+
+ if(vrep_frame_id != vrep_message.id)
+ {
+     vrep_frame_id = vrep_message.id;
+     printf("vrep frame : \n id=%d \n",vrep_message.id);
+     sendto(server, &vrep_message, sizeof(vrep_message), 0, (struct sockaddr*)&sockAddr,sizeof(sockAddr));
 	
-}
-
-recvfrom(client, &vrep_message,sizeof(vrep_message), 0,(struct sockaddr*)&sock, &longaddr2);
-
-if(vrep_frame_id != vrep_message.id)
-{
-	vrep_frame_id = vrep_message.id;
-	printf("vrep frame : \n id=%d \n",vrep_message.id);
-	usleep(Te); // fake delay
-	sendto(server, &vrep_message, sizeof(vrep_message), 0, (struct sockaddr*)&sockAddr,sizeof(sockAddr));
-	
-}
-
+ }
 
 }while(rtt_message.id<100.0);
 

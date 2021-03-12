@@ -6,14 +6,17 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <time.h>
 
+
+/// message send to VREP
 struct mesg {
-
-long id;
-double position[1];
-double control[1];
-
+  long id;
+  double position[1];
+  double control[1];
+  clock_t date;
 };
+
 
 #define ERROR (-1)
 
@@ -44,13 +47,20 @@ fcntl(serveur,F_SETFL,fcntl(serveur,F_GETFL) | O_NONBLOCK);
 
 do{
 
-message.id++;
-printf("send : \n  id=%d \n",message.id);
-sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
+  // Updating message data
+  message.id++;
+  message.date = clock();
+  printf("sended : \n  id=%d \n",message.id);
+  sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
 
-while(recvfrom(serveur,&answer,sizeof(answer), 0,(struct sockaddr*)&sockAddr,&addr) == -1);
-
-printf("recieve : \n  id=%d \n",answer.id);
+  unsigned long timout = clock(); 
+  while(recvfrom(serveur,&answer,sizeof(answer), 0,(struct sockaddr*)&sockAddr,&addr) == -1 && (clock() -  timout) * 1000 / CLOCKS_PER_SEC <= 10000);
+  if((clock() -  timout) * 1000 / CLOCKS_PER_SEC <= 10000)
+  {
+    unsigned long time_spent = (clock() -  answer.date) * 1000 / CLOCKS_PER_SEC;
+    printf("recieve : \n  id=%d and take a time of %ld\n",answer.id, time_spent);
+  }
+  else printf("packet loss\n");
 
 }while(message.id<100.0);
 
