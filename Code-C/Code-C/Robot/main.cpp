@@ -26,6 +26,7 @@ struct mesg {
   double control[1];
   clock_t date;
 
+
 };
 
 #define ERROR (-1)
@@ -172,7 +173,10 @@ int main(int argc,char* argv[])
 
 	  serveur=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
 		sockAddr.sin_family=PF_INET;
+
 		sockAddr.sin_port=htons(2500); 
+
+
 		sockAddr.sin_addr.s_addr=0;
 	 	longaddr=sizeof(sockAddr);
 
@@ -181,7 +185,9 @@ int main(int argc,char* argv[])
 		    printf("\n erreur de bind du serveur UDP!! \n");
 		}
 
+
 	message.id=0;
+
 	message.position[0]=0.0;
 	message.control[0]=0.0;
 
@@ -218,11 +224,14 @@ int main(int argc,char* argv[])
 
        while (t < tfinal) {
 
+
 			if(resultr=recvfrom(serveur,&message,sizeof(message), 0,(struct sockaddr*)&sockAddr,(socklen_t*)&longaddr) != -1)
 			{
 
 
 			printf("server : \n id=%d rt=%d rr=%d control=%lf\n",message.id, results, resultr, message.control[0]);
+
+
            printf("Current time: %6.4f\n", t);
            //GetJointPos(clientId,qr);
            q[0]=q0m*message.control[0];
@@ -244,7 +253,9 @@ int main(int argc,char* argv[])
 
 
 			results=sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
+
 			}
+
         }
 
         simxStopSimulation(clientID, simx_opmode_oneshot);
@@ -259,7 +270,10 @@ int main(int argc,char* argv[])
 
 
 
+
 	}while(message.id<100.0);
+
+
 
 
 	close(serveur);
