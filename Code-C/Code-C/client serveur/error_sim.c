@@ -72,6 +72,8 @@ srand((unsigned)time(NULL));
 delay_time = (rand() % 8 + 1) * 1000000; // between 1 and 9 seconds
 rand_number = rand() % 30 + 10; // between 10 and 40 loops
 
+printf("delay time = %ld during %ld loops \n", delay_time/1000000, rand_number);
+
 
 fcntl(server,F_SETFL,fcntl(server,F_GETFL) | O_NONBLOCK); 
 fcntl(client,F_SETFL,fcntl(client,F_GETFL) | O_NONBLOCK);
@@ -84,11 +86,19 @@ recvfrom(server, &rtt_message,sizeof(rtt_message), 0,(struct sockaddr*)&sockAddr
 // make sure we don't send the packet twice
  if(rtt_frame_id != rtt_message.id)
  {
-   int eject_packet = rand() % 100;
-   rtt_frame_id = rtt_message.id;
-   printf("rtt frame : \n id=%d \n",rtt_message.id);
-   usleep(delay_time); // fake delay
-   if(eject_packet <= 50)
+   	int eject_packet = rand() % 100;
+   	rtt_frame_id = rtt_message.id;
+   	printf("rtt frame : \n id=%d \n",rtt_message.id);
+   	usleep(delay_time); // fake delay
+	rand_number--;
+	 if (rand_number <= 0)
+	 {
+		 delay_time = (rand() % 8 + 1) * 1000000; // between 1 and 9 seconds
+		 rand_number = rand() % 30 + 10; // between 10 and 40 loops
+		printf("delay time = %ld during %ld loops \n", delay_time/1000000, rand_number);
+	 }
+
+   if(eject_packet <= 90)
    {
      sendto(client, &rtt_message, sizeof(rtt_message), 0, (struct sockaddr*)&sock, sizeof(sock)); // send frame to VREP server
    }
@@ -105,12 +115,6 @@ recvfrom(server, &rtt_message,sizeof(rtt_message), 0,(struct sockaddr*)&sockAddr
      printf("vrep frame : \n id=%d \n",vrep_message.id);
      sendto(server, &vrep_message, sizeof(vrep_message), 0, (struct sockaddr*)&sockAddr,sizeof(sockAddr));
 	
- }
- rand_number--;
- if (rand_number <= 0)
- {
-	 delay_time = (rand() % 8 + 1) * 1000000; // between 1 and 9 seconds
-	 rand_number = rand() % 30 + 10; // between 10 and 40 loops
  }
 
 }while(rtt_message.id<100.0);

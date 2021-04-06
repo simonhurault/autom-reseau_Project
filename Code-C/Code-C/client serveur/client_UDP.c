@@ -39,8 +39,8 @@ int serveur, client, err, nConnect, longaddr , results, resultr;
     addr=sizeof(sockAddr);
 
 message.id=0.0;
-message.position[0]=0.0;
-message.control[0]=0;
+message.position[0]=0;
+message.control[0]=50;
 
 
 fcntl(serveur,F_SETFL,fcntl(serveur,F_GETFL) | O_NONBLOCK); 
@@ -50,6 +50,7 @@ do{
   // Updating message data
   message.id++;
   message.date = clock();
+  message.control[0] = -message.control[0];
   printf("sended : \n  id=%d \n",message.id);
   sendto(serveur,&message,sizeof(message),0,(struct sockaddr*)&sockAddr,sizeof(sockAddr));
 
